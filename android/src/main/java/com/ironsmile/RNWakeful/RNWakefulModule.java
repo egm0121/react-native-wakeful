@@ -2,13 +2,16 @@ package com.ironsmile.RNWakeful;
 
 import android.os.PowerManager;
 import android.net.wifi.WifiManager;
+import android.util.Log;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.Callback;
 
 import java.util.HashMap;
 import java.util.Map;
+
 
 public class RNWakefulModule extends ReactContextBaseJavaModule {
   PowerManager.WakeLock wakeLock = null;
@@ -16,16 +19,17 @@ public class RNWakefulModule extends ReactContextBaseJavaModule {
   boolean locksHeld = false;
   ReactApplicationContext context;
   final static Object NULL = null;
+  private static final String TAG = "RNWakeful";
 
   public RNWakefulModule(ReactApplicationContext context) {
     super(context);
     this.context = context;
 
     PowerManager pm = (PowerManager)this.context.getSystemService(ReactApplicationContext.POWER_SERVICE);
-    this.wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "RNWakeful");
+    this.wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "RNWakeful:wakeLock");
 
     WifiManager wm = (WifiManager)this.context.getSystemService(ReactApplicationContext.WIFI_SERVICE);
-    this.wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL, "RNWakefulWifi");
+    this.wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "RNWakefulWifi");
   }
 
   @Override
@@ -34,13 +38,15 @@ public class RNWakefulModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public boolean isHeld() {
-    return this.locksHeld;
+  public void isHeld(Callback cb) {
+    Log.d(TAG, "isHeld invoked" + this.locksHeld);
+    cb.invoke(this.locksHeld);
   }
 
   @ReactMethod
   public void acquire() {
-    if (this.isHeld()) {
+    Log.d(TAG, "acquire invoked");
+    if (this.locksHeld) {
       return;
     }
     this.wakeLock.acquire();
@@ -50,7 +56,8 @@ public class RNWakefulModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void release() {
-    if (!this.isHeld()) {
+    Log.d(TAG, "acquire release");
+    if (!this.locksHeld) {
       return;
     }
     this.wakeLock.release();

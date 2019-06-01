@@ -5,8 +5,9 @@ class ImplementedWakeful {
       this.RNWakeful = NativeModules.RNWakeful;
     }
 
-    isHeld() {
-        return this.RNWakeful.isHeld();
+    isHeld(cb = () => {}) {
+        const retVal = this.RNWakeful.isHeld(cb);
+        return cb(retVal);
     }
 
     acquire() {
@@ -34,8 +35,8 @@ class DummyWakeful {
         }
         this.locksHeld = false;
     }
-    isHeld() {
-        return this.locksHeld;
+    isHeld(cb = () => {}) {
+        return cb(this.locksHeld);
     }
 }
 
